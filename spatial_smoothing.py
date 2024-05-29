@@ -42,7 +42,7 @@ def spatial_smoothing(
         num_processes: int = None) -> np.ndarray:
     print("CPUs initialization...")
     if num_processes is None:
-        num_processes = cpu_count()  # Use all available CPUs
+        num_processes = cpu_count()  
     print("System initialization...")
     selection = universe.select_atoms(selection)
     print("Loading descriptor...")
@@ -86,13 +86,13 @@ def spatial_smoothing(
     return sp_array
 
 # EXAMPLE
-cutoff = 10
-name = "SOAP_10.npy"
-array = f"DEV_TEST/{name}"
-u = mda.Universe("DEV_TEST/ice_water.gro", "DEV_TEST/ice_water_500.xtc")
-sp_array = spatial_smoothing(u, array, "type O", cutoff, 8)
-print(sp_array)
-np.save(f"sp_{cutoff}_p_{name}",sp_array)
+# cutoff = 10
+# name = "SOAP_10.npy"
+# array = f"DEV_TEST/{name}"
+# u = mda.Universe("DEV_TEST/ice_water.gro", "DEV_TEST/ice_water_500.xtc")
+# sp_array = spatial_smoothing(u, array, "type O", cutoff, 8)
+# print(sp_array)
+# np.save(f"sp_{cutoff}_p_{name}",sp_array)
 
 
 
