@@ -40,11 +40,12 @@ def spatial_smoothing(
         selection: str,
         cutoff: float,
         num_processes: int = None) -> np.ndarray:
-
+    print("CPUs initialization...")
     if num_processes is None:
         num_processes = cpu_count()  # Use all available CPUs
-
+    print("System initialization...")
     selection = universe.select_atoms(selection)
+    print("Loading descriptor...")
     array = np.load(array_path)
     
     shape = array.shape
@@ -55,9 +56,11 @@ def spatial_smoothing(
     np.copyto(shared_array_np, array)
 
     if array.ndim == 2:
+        print(f"  - Monodimensional descriptor of shape: {array.shape}")
         sp_array = np.zeros((array.shape[0], array.shape[1]))
         vector = False
     elif array.ndim == 3:
+        print(f"  - Multidimensional descriptor of shape: {array.shape}")
         sp_array = np.zeros((array.shape[0], array.shape[1], array.shape[2]))
         vector = True
     else:
@@ -65,25 +68,21 @@ def spatial_smoothing(
 
     num_frames = len(universe.trajectory)
     
-    # Initialize pool with initializer for shared array
+    print("Workers initialization...")
     pool = Pool(processes=num_processes, initializer=init_worker, initargs=(shared_array, shape, dtype))
-
-    # Create a list of arguments for each frame
+    print("Collecting spatial average arguments...")
     args = [(universe, selection, cutoff, frame, vector) for frame in range(num_frames)]
-    
-    # Use the pool to process frames in parallel
+    print("Computing spatial average...")
     results = pool.map(process_frame, args)
     pool.close()
     pool.join()
-
-    # Aggregate results
+    print("Collecting results...")
     for frame, sp_array_frame in results:
         if vector:
             sp_array[:, frame, :] = sp_array_frame
         else:
             sp_array[:, frame] = sp_array_frame
-
-    print(sp_array)
+    print("Process completed")
     return sp_array
 
 # EXAMPLE
@@ -91,12 +90,9 @@ cutoff = 10
 name = "SOAP_10.npy"
 array = f"DEV_TEST/{name}"
 u = mda.Universe("DEV_TEST/ice_water.gro", "DEV_TEST/ice_water_500.xtc")
-start_time = time.time()
 sp_array = spatial_smoothing(u, array, "type O", cutoff, 8)
-end_time = time.time()
 print(sp_array)
 np.save(f"sp_{cutoff}_p_{name}",sp_array)
-print(f"Time: {(end_time-start_time)/60} min")
 
 
 
