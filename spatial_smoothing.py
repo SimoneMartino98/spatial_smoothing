@@ -3,6 +3,7 @@ import MDAnalysis as mda
 from MDAnalysis.analysis.distances import distance_array
 import numpy as np
 
+# Main function
 def spatial_smoothing(
         universe: mda.Universe,
         array: np.ndarray,
