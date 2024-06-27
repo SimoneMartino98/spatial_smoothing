@@ -39,6 +39,7 @@ def spatial_smoothing(
         array_path: str,
         selection: str,
         cutoff: float,
+        traj_cut: int = 0,
         num_processes: int = None) -> np.ndarray:
     print("CPUs initialization...")
     if num_processes is None:
@@ -54,7 +55,6 @@ def spatial_smoothing(
     shared_array = Array(ctypes.c_double, array.size, lock=False)
     shared_array_np = np.frombuffer(shared_array, dtype=dtype).reshape(shape)
     np.copyto(shared_array_np, array)
-
     if array.ndim == 2:
         print(f"  - Monodimensional descriptor of shape: {array.shape}")
         sp_array = np.zeros((array.shape[0], array.shape[1]))
@@ -66,8 +66,8 @@ def spatial_smoothing(
     else:
         raise ValueError("INVALID ARRAY SHAPE")
 
-    num_frames = len(universe.trajectory)
-    
+    num_frames = len(universe.trajectory) - traj_cut
+    print(f"  - Trajectory length: {num_frames}")
     print("Workers initialization...")
     pool = Pool(processes=num_processes, initializer=init_worker, initargs=(shared_array, shape, dtype))
     print("Collecting spatial average arguments...")
@@ -86,13 +86,13 @@ def spatial_smoothing(
     return sp_array
 
 # EXAMPLE
-# cutoff = 10
-# name = "SOAP_10.npy"
-# array = f"DEV_TEST/{name}"
-# u = mda.Universe("DEV_TEST/ice_water.gro", "DEV_TEST/ice_water_500.xtc")
-# sp_array = spatial_smoothing(u, array, "type O", cutoff, 8)
-# print(sp_array)
-# np.save(f"sp_{cutoff}_p_{name}",sp_array)
+cutoff = 10
+name = "vel.npy"
+array = f"DEV_TEST/{name}"
+u = mda.Universe("DEV_TEST/ice_water.gro", "DEV_TEST/ice_water_500.xtc")
+sp_array = spatial_smoothing(u, array, "type O", cutoff,0, 8)
+print(sp_array)
+np.save(f"sp_{cutoff}_p_{name}",sp_array)
 
 
 
